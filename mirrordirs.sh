@@ -25,14 +25,16 @@
 # "The above copyright notice and this permission notice shall be included
 # in all copies or substantial portions of the Software."
 #
-# This program was originally written to do a destructive mirror from the source
-# directory to the destination.  I eventually made the destructive part optional,
-# as I was trying to incorporate other functionality that wound up being a diff-
-# erent script entirely.  The "nice" feature was added because left unchecked,
-# doing rsync over a network can really bog down the source machine.
+# This program was originally written to do a destructive mirror from the 
+# source directory to the destination.  I eventually made the destructive part
+# optional, as I was trying to incorporate other functionality that wound up 
+# being a different script entirely.  The "nice" feature was added because 
+# left unchecked, doing rsync over a network can really bog down the source
+# machine.
 #
 # Lastly, I added code to create a backup of deleted files, as I extended the
-# capability to fit my needs on the Raspberry Pi, which would be a one-way sync.
+# capability to fit my needs on the Raspberry Pi, which would be a one-way
+# sync.
 #
 # It should be stressed that this program is excellent for a one-way sync, but
 # for a two-way sync, not so much.  That is why I created the other script,

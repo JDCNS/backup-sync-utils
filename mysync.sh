@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # Input 2 directories, first source, second destination.
-# Do compare and see which have been removed from source and remove from destination
-# by moving it to hold directory.
+# Do compare and see which have been removed from source and remove from
+# destination by moving it to hold directory.
 #
 # mysync, two-way sync based on rsync
 #
