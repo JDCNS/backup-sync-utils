@@ -5,7 +5,7 @@ Got tired of standard fare for backing up and, in particular, sync'ing, so
 I rolled my own.
 
 This is a combination of tools that I merged from some Raspberry Pi (Raspbian)
-and Ubuntu utilities.
+and Ubuntu utilities I either wrote or was using and re-wrote.
 
 Originally, I was using FreeFileSync on Ubuntu, but I have a 32 bit system,
 and it seems the maintainers do not have resources and/or time for 32 bit 
