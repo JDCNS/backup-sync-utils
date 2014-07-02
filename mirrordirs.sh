@@ -43,32 +43,48 @@
 
 usage()
 {
-	echo "Usage: $0 [-d] [-n x] sourcedir destdir\nWhere: -d means delete excluded files\n       -b means to put files in destdir/root and backup files into destdir/backup\n       -n x, where x is the nice level\n       sourcedir and destdir MUST be directories!" 1>&2
+	echo "Usage: $THISPROG [-d] [-b] [-q] [-x] [-n x] sourcedir destdir"
+	echo "Where: -d means delete excluded files"
+	echo "       -b means to put files in destdir/root and backup files into"
+	echo "           destdir/backup"
+	echo "       -q means quiet, don't prompt to continue (REQUIRES '-b!]"
+	echo "       -x means don't cross file systems (no mount points)"
+	echo "       -n x, where x is the nice level"
+	echo "       sourcedir and destdir MUST be directories!"
 	exit 1
 }
 
+# Sometimes, you need to be paranoid :)
+THISPROG="$0"
+
 NICE="10"
 DOBACKUP="0"
+SUPPRESSPROCEEDPROMPT="0"
+SHOWPROGRESS="--progress"
+EXCLUDEMOUNTPOINTS=" "
 
-while getopts "bdn:" o; do
+while getopts "bdqxn:" o; do
 	case "${o}" in
 		b)
 			DOBACKUP="1"
 			;;
 		d)
 			DEL="--delete-before --delete-excluded"
-#			echo "DEL=$DEL"
 			;;
 		n)
 			NICE=${OPTARG}
-#			echo "NICE=$NICE"
+			;;
+		q)
+			SUPPRESSPROCEEDPROMPT="1"
+			SHOWPROGRESS=" "
+			;;
+		x)
+			EXCLUDEMOUNTPOINTS="-x"
 			;;
 		*)
 			usage
 			;;
 	esac
-#	LOOP=`expr $LOOP + 1`
-#	echo $LOOP
 done
 shift $((OPTIND-1))
 
@@ -92,7 +108,7 @@ then
 fi
 
 CURTIME=`date +\%F_\%T | sed s/:/\./g`
-echo "Time began $CURTIME"
+echo "Time $THISPROG began $CURTIME"
 
 if [ "$DOBACKUP" = "1" ]
 then
@@ -105,18 +121,29 @@ else
 fi
 
 echo $ORIGDIR "->" $DESTDIR
-echo "$DEL"
+echo "$DEL" "$EXCLUDEMOUNTPOINTS"
 echo "BACKUPCMD = ${BACKUPCMD}"
 echo "nice level $NICE"
 
 # First, check for destination directory
 if [ -d "$DESTDIR" ] && [ -d "$ORIGDIR" ]
 then
-	echo -n "Proceed [Y/n]? "
-	read YN
-	if [ "$YN" = "" ]
+	if [ "$SUPPRESSPROCEEDPROMPT" = "1" ]
 	then
-		YN="Y"
+		if [ "$DOBACKUP" = "0" ]
+		then
+			echo "Error! Must do backup if suppressing prompt!"
+			exit 4
+		else
+			YN="Y"
+		fi
+	else
+		echo -n "Proceed [Y/n]? "
+		read YN
+		if [ "$YN" = "" ]
+		then
+			YN="Y"
+		fi
 	fi
 	if [ "$YN" = "y" -o "$YN" = "Y" ]
 	then
@@ -142,7 +169,7 @@ then
 			fi
 		fi
 
-		nice -n $NICE rsync -vau $DEL --exclude=**~ --exclude=**/*cache*/ --exclude=**/*Cache*/ --exclude=Thumbs.db --exclude=**.ffs_db --exclude=.local/share/Trash --exclude=.Trash-* --exclude=*.Sync* --exclude=**Desktop.ini --exclude=**desktop.ini --exclude=**/*_vti_cnf*/ --exclude=**\!sync $BACKUPCMD "$ORIGDIR" "$DESTDIRROOT"
+		nice -n $NICE rsync -vau $SHOWPROGRESS $EXCLUDEMOUNTPOINTS $DEL --exclude=**~ --exclude=**/*cache*/ --exclude=**/*Cache*/ --exclude=Thumbs.db --exclude=**.ffs_db --exclude=.local/share/Trash --exclude=.Trash-* --exclude=*.Sync* --exclude=**Desktop.ini --exclude=**desktop.ini --exclude=**/*_vti_cnf*/ --exclude=**\!sync $BACKUPCMD "$ORIGDIR" "$DESTDIRROOT"
 		echo "Done!"
 	else
 		echo "Aborted!"
@@ -152,5 +179,5 @@ else
 fi
 
 CURTIME=`date +\%F_\%T | sed s/:/\./g`
-echo "Time ended $CURTIME"
+echo "Time $THISPROG ended $CURTIME"
 
