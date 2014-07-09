@@ -256,8 +256,8 @@ ubackups**
 #\.VirtualBox
 # Instead of this, set Windows environment variable VBOX_USER_HOME to
 # something like "%HOMEDRIVE%%HOMEPATH%/.config/VirtualBox.windows"
-# and in Linux set variable "VBOX_USER_HOME=/home/john/.config/VirtualBox.linux"
-# without quotes in $HOME/.pam_environment
+# and in Linux set variable "VBOX_USER_HOME=$HOME/.config/VirtualBox.linux"
+# without quotes and replacing $HOME as appropriate in $HOME/.pam_environment
 
 # Additional directives go here
 EOF
