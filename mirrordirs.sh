@@ -62,6 +62,8 @@ DOBACKUP="0"
 SUPPRESSPROCEEDPROMPT="0"
 SHOWPROGRESS="--progress"
 EXCLUDEMOUNTPOINTS=" "
+# Assume update (skip newer files on receiving end) unless deleting
+DEL="-u"
 
 while getopts "bdqxn:" o; do
 	case "${o}" in
@@ -169,7 +171,7 @@ then
 			fi
 		fi
 
-		nice -n $NICE rsync -vau $SHOWPROGRESS $EXCLUDEMOUNTPOINTS $DEL --exclude=**~ --exclude=**/*cache*/ --exclude=**/*Cache*/ --exclude=Thumbs.db --exclude=**.ffs_db --exclude=.local/share/Trash --exclude=.Trash-* --exclude=*.Sync* --exclude=**Desktop.ini --exclude=**desktop.ini --exclude=**/*_vti_cnf*/ --exclude=**\!sync $BACKUPCMD "$ORIGDIR" "$DESTDIRROOT"
+		nice -n $NICE rsync -va $SHOWPROGRESS $EXCLUDEMOUNTPOINTS $DEL --exclude=**~ --exclude=**/*cache*/ --exclude=**/*Cache*/ --exclude=Thumbs.db --exclude=**.ffs_db --exclude=.local/share/Trash --exclude=.Trash-* --exclude=*.Sync* --exclude=**Desktop.ini --exclude=**desktop.ini --exclude=**/*_vti_cnf*/ --exclude=**\!sync $BACKUPCMD "$ORIGDIR" "$DESTDIRROOT"
 		echo "Done!"
 	else
 		echo "Aborted!"

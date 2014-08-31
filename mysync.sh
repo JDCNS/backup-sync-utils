@@ -241,8 +241,8 @@ Thumbs.db
 # Be careful here, these should not be run as part of a "destroy" operation!
 .fuse_hidden*
 **gvfs**
-ntuser.*
-NTUSER.*
+# Seriously, why is Windows so screwed up?
+[nN][tT][uU][sS][eE][rR].dat*
 .[pP]rivate
 .ecryptfs
 # Excuse yourself
