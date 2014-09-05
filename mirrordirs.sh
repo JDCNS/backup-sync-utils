@@ -60,7 +60,7 @@ THISPROG="$0"
 NICE="10"
 DOBACKUP="0"
 SUPPRESSPROCEEDPROMPT="0"
-SHOWPROGRESS="--progress"
+SHOWPROGRESS="--progress --info=progress2"
 EXCLUDEMOUNTPOINTS=" "
 # Assume update (skip newer files on receiving end) unless deleting
 DEL="-u"
@@ -79,6 +79,7 @@ while getopts "bdqxn:" o; do
 		q)
 			SUPPRESSPROCEEDPROMPT="1"
 			SHOWPROGRESS=" "
+
 			;;
 		x)
 			EXCLUDEMOUNTPOINTS="-x"
