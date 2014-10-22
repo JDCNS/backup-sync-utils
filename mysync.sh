@@ -401,7 +401,7 @@ function archivedeletedfiles {
 	        DESTFULLNAME=`echo $line | sed s,"$SRCSIDE","$DESTSIDE",`
         	if [ -e "$DESTFULLNAME" ]
             	then
-			FULLBACKUPFILE="${BACKUPDIR}/${BASEDIR}.${MAPSIDE}_${CURTIME}${line}"
+			FULLBACKUPFILE="${BACKUPDIR}/${BASEDIR}.${MAPSIDE}_${CURTIME}${DESTFULLNAME}"
 			echo "Full BACKUPFILE in $FULLBACKUPFILE" | tee -a "$LOGFILE" >&2
 			FULLBACKUPDIR=`dirname "${FULLBACKUPFILE}"`
 			if [ -d "${FULLBACKUPDIR}" ]
