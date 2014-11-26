@@ -75,10 +75,11 @@ askproceed
 
 if [ $? = 1 ]
 then
-	echo "Proceeding."
+	echo "Proceeding ${CURTIME}." | tee -a  "${DESTDIR}/${PINAME}_${CURTIME}.log"
 	echo "${SDCARD} --> ${DESTDIR}/${PINAME}_${CURTIME}.img"
-	dcfldd bs=2M if="${SDCARD}" of="${DESTDIR}/${PINAME}_${CURTIME}.img"
+	dcfldd bs=32M if="${SDCARD}" of="${DESTDIR}/${PINAME}_${CURTIME}.img"	| tee -a  "${DESTDIR}/${PINAME}_${CURTIME}.log"
+	DONETIME=`date +\%F_\%T | sed s/:/\./g`
+	echo "Finished ${DONETIME}." | tee -a "${DESTDIR}/${PINAME}_${CURTIME}.log"
 else
 	echo "Quitting."
 fi
-
