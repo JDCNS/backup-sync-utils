@@ -241,6 +241,7 @@ Thumbs.db
 # Be careful here, these should not be run as part of a "destroy" operation!
 .fuse_hidden*
 **gvfs**
+.vnc
 # Seriously, why is Windows so screwed up?
 [nN][tT][uU][sS][eE][rR].dat*
 .[pP]rivate
@@ -446,7 +447,7 @@ function dorsync {
     if [ -f "$1/mounted" ] && [ -f "$2/mounted" ]
     then
         echo "flags: $DRYRUNSTRING" "$DELETESTRING" "$IGNOREFILE" "$1/" "$2/" | tee -a "$LOGFILE"
-        nice -n $NICE rsync -vau "$DRYRUNSTRING" "$DELETESTRING" --exclude-from="$IGNOREFILE" "$1/" "$2/" > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2)
+        nice -n $NICE rsync -vurptD "$DRYRUNSTRING" "$DELETESTRING" --exclude-from="$IGNOREFILE" "$1/" "$2/" > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2)
         echo "Rsync $1 -> $2 Done!"
     else
 	echo "Error in either source dir $1 or dest dir $2!" | tee -a "$LOGFILE"
