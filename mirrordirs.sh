@@ -60,7 +60,7 @@ THISPROG="$0"
 NICE="10"
 DOBACKUP="0"
 SUPPRESSPROCEEDPROMPT="0"
-SHOWPROGRESS="--progress --info=progress2"
+SHOWPROGRESS="--progress"
 EXCLUDEMOUNTPOINTS=" "
 # Assume update (skip newer files on receiving end) unless deleting
 DEL="-u"
