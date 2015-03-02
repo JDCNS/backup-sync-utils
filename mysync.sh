@@ -82,8 +82,20 @@ export PATH=${HOME}/bin:/usr/lib/lightdm/lightdm:/usr/local/sbin:/usr/local/bin:
 
 usage()
 {
-	printf "Usage: $THISPROG [-d] [-n x] sourcedir destdir \nWhere: -d means delete excluded files \n       -n x, where x is the nice level \n       sourcedir and destdir MUST be directories!\n\n" 1>&2
+	printf "Usage: %s [-d] [-n x] sourcedir destdir \nWhere: -d means delete excluded files \n       -n x, where x is the nice level \n       sourcedir and destdir MUST be directories!\n\n" "$THISPROG" 1>&2
 	exit 1
+}
+
+checkmounted()
+{
+	if [ -f "$1/mounted" ] && [ -f "$2/mounted" ]
+	then
+		echo "drives mounted OK."
+	else
+		echo "Error in either source dir $1 or dest dir $2!" | tee -a "$LOGFILE"
+		notify-send 'Sync Failed' 'Please connect hard drive ASAP!'
+		exit 3
+	fi
 }
 
 NICE="10"
@@ -138,22 +150,7 @@ echo "DESTDIR is $DESTDIR"
 
 # It is one thing if the destination exists, but what if it is a share that isn't mounted?
 # Then life gets more complicated.  Better safe than sorry.
-if [ -f "$DESTDIR/mounted" ] && [ -f "$SRCDIR/mounted" ]
-then
-	echo "SRCDIR and DESTDIR OK"
-else
-	if [ ! -f "$DESTDIR/mounted" ]
-	then
-		echo "Destination/mounted does not exist!"
-	fi
-	if [ ! -f "$SRCDIR/mounted" ]
-	then
-		echo "Source/mounted does not exist!"
-	fi
-
-	notify-send 'Sync Failed' 'Please connect  and/or mount drive and check ASAP!'
-	exit 3
-fi
+checkmounted "$DESTDIR" "$SRCDIR"
 
 CONFIGDIR="$HOME/.mysync"
 BACKUPDIR="$HOME/ubackups"
@@ -280,6 +277,7 @@ fi
 function createlistfiles {
     # Setup direction
     MAPSIDE=$1
+    checkmounted $SRCDIR $DESTDIR
     if [ "$MAPSIDE" == "SRC" ]
     then
         FINDSIDE=$SRCDIR
@@ -304,6 +302,7 @@ function createlistfiles {
 function createremovedfilelist {
     # Setup direction
     MAPSIDE=$1
+    checkmounted $SRCDIR $DESTDIR
     if [ "$MAPSIDE" == "SRC" ]
     then
         FINDSIDE=$SRCDIR
@@ -322,7 +321,7 @@ function createremovedfilelist {
 	printf "."
         # Sigh, fix square brackets if they exist
         NOSQUARE=`echo "$line" | sed 's/\[/\\\[/g' | sed 's/\]/\\\]/g'` >> /dev/null
-        grep "$NOSQUARE$" "$CONFIGDIR/$BASEDIR"_"$MAPSIDE"."$NUMFILES" >> /dev/null
+        grep "$NOSQUARE$" "${CONFIGDIR}/${BASEDIR}_${MAPSIDE}.${NUMFILES}" >> /dev/null
         GRESULT="$?"
         # echo "$GRESULT on $NOSQUARE"
         if [ "$GRESULT" != "0" ]
@@ -365,7 +364,7 @@ function createremovedfilelist {
 
 # exit 0
         fi
-    done < "$CONFIGDIR/$BASEDIR"_"$MAPSIDE"."$LASTFILE"
+    done < "${CONFIGDIR}/${BASEDIR}_${MAPSIDE}.${LASTFILE}"
     printf "\n"
 #    exit 0
 }
@@ -373,6 +372,7 @@ function createremovedfilelist {
 function archivedeletedfiles {
     # Save off direction
     MAPSIDE="$1"
+    checkmounted $SRCDIR $DESTDIR
     # See if file even exists first, else waste of time
     if [ -f "$CONFIGDIR/$BASEDIR.tmp" ]
     then
@@ -381,10 +381,16 @@ function archivedeletedfiles {
         then
             SRCSIDE="$SRCDIR"
             DESTSIDE="$DESTDIR"
+	    # This is a bit confusing, but if the file removed
+	    # was on SRC side, then we are backing up DEST side
+	    BACKSIDE="DEST"
         elif [ "$MAPSIDE" == "DEST" ]
         then
             SRCSIDE="$DESTDIR"
             DESTSIDE="$SRCDIR"
+	    # Likewise, if removed file list is on DEST side
+	    # then we want to backup SRC side files
+	    BACKSIDE="SRC"
         else
             echo "Error in archivedeleted files function parm $1!" | tee -a "$LOGFILE"
             exit 1
@@ -402,9 +408,9 @@ function archivedeletedfiles {
 	        DESTFULLNAME=`echo $line | sed s,"$SRCSIDE","$DESTSIDE",`
         	if [ -e "$DESTFULLNAME" ]
             	then
-			FULLBACKUPFILE="${BACKUPDIR}/${BASEDIR}.${MAPSIDE}_${CURTIME}${DESTFULLNAME}"
+			FULLBACKUPFILE="${BACKUPDIR}/${BASEDIR}.${BACKSIDE}_${CURTIME}${DESTFULLNAME}"
 			echo "Full BACKUPFILE in $FULLBACKUPFILE" | tee -a "$LOGFILE" >&2
-			FULLBACKUPDIR=`dirname "${FULLBACKUPFILE}"`
+			FULLBACKUPDIR=$(dirname "${FULLBACKUPFILE}")
 			if [ -d "${FULLBACKUPDIR}" ]
 			then
 				echo "${FULLBACKUPDIR} exists. OK."> >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2)
@@ -428,7 +434,7 @@ function archivedeletedfiles {
 
 function dorsync {
 #    DRYRUNFLAG=1
-    if [ $DRYRUNFLAG ]
+    if [ "$DRYRUNFLAG" = "1" ]
     then
         DRYRUNSTRING="--dry-run"
     else
@@ -444,16 +450,12 @@ function dorsync {
     fi
 
     # Final Sanity check
-    if [ -f "$1/mounted" ] && [ -f "$2/mounted" ]
-    then
-        echo "flags: $DRYRUNSTRING" "$DELETESTRING" "$IGNOREFILE" "$1/" "$2/" | tee -a "$LOGFILE"
-        nice -n $NICE rsync -vurptD "$DRYRUNSTRING" "$DELETESTRING" --exclude-from="$IGNOREFILE" "$1/" "$2/" > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2)
-        echo "Rsync $1 -> $2 Done!"
-    else
-	echo "Error in either source dir $1 or dest dir $2!" | tee -a "$LOGFILE"
-	notify-send 'Sync Failed' 'Please connect hard drive and back up your daturz ASAP!'
-	exit 3
-    fi
+    checkmounted "$1" "$2"
+
+    echo "flags: $DRYRUNSTRING" "$DELETESTRING" "$IGNOREFILE" "$1/" "$2/" | tee -a "$LOGFILE"
+    nice -n "$NICE" rsync -vurptD "$DRYRUNSTRING" "$DELETESTRING" --exclude-from="$IGNOREFILE" "$1/" "$2/" > >(tee -a "$LOGFILE") 2> >(tee -a "$LOGFILE" >&2)
+    echo "Rsync $1 -> $2 Done!"
+
 }
 
 # Find out what files have been deleted from source; store in temp file.
@@ -476,10 +478,9 @@ dorsync "$DESTDIR" "$SRCDIR"
 createlistfiles SRC
 # Final cleanup
 rm "$CONFIGDIR/$BASEDIR.tmp" &> /dev/null
-CURTIME=`date +\%F_\%T | sed s/:/\./g`
+CURTIME=$(date +\%F_\%T | sed s/:/\./g)
 echo "Sync finished $CURTIME" | tee -a "$LOGFILE"
 echo " " | tee -a "$LOGFILE"
 
 # Note to self: Don't forget double quotes for variable expansion
 notify-send "$THISPROG Completed" "Check $LOGFILE for details"
-
